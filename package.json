@@ -1,0 +1,21 @@
+{
+    "name": "glsl-slider",
+    "version": "0.0.1",
+    "description": "Slider with webgl effects",
+    "main": "build/main.js",
+    "scripts": {
+        "build": "rollup -c"
+    },
+    "keywords": [
+        "js",
+        "glsl",
+        "shaders",
+        "canvas"
+    ],
+    "author": "Andrey Kozlov",
+    "license": "MIT",
+    "dependencies": {},
+    "devDependencies": {
+        "rollup": "^0.62.0"
+    }
+}
