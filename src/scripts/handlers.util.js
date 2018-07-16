@@ -40,8 +40,8 @@ export function addHandlersNavigationArrows(arrows) {
     });
 }
 
-export function addHandlersNavigationDots(btn, number) {
-    // $(btn).on('click', function () {
-    //     methods.slideTo(number);
-    // });
+export function addHandlersNavigationDots(btn, callback) {
+    btn.addEventListener('click', function(){
+        callback();
+    });
 }

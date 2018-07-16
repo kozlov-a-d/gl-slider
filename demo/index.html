@@ -20,17 +20,36 @@
         <div class="slider__item" data-item><img src="images/girl-2.jpg" alt=""></div>
     </div>
 
+    <script src="./vendor/dat.gui/dat.gui.min.js"></script>
     <script src="../build/main.js"></script>
     <script>
-        let slider = new SliderGLSL(document.getElementById('slider'), {
+        let sliderOptions = {
             dots: true,
             animationSpeed: 800,
             effects: {
                 filter: 'base',        // base | monochrome | negative | sepia
                 slide: 'wave'      // base | zoomBlur | fragmentParalax | wave
             }
+        };
+        let slider = new SliderGLSL(document.getElementById('slider'), sliderOptions);
+
+        let gui = new dat.GUI();
+
+        let controllerFilter = gui.add(sliderOptions.effects, 'filter', ['base', 'monochrome', 'negative', 'sepia']);
+        controllerFilter.onFinishChange(function () {
+            slider.update(sliderOptions);
         });
-        slider.test();
+
+        let controllerSlide = gui.add(sliderOptions.effects, 'slide', ['base', 'wave', 'zoomBlur', 'fragmentParalax']);
+        controllerSlide.onFinishChange(function () {
+            slider.update(sliderOptions);
+        });
+
+        let controllerSpeed = gui.add(sliderOptions, 'animationSpeed', 0, 1500);
+        controllerSpeed.onFinishChange(function () {
+            slider.update(sliderOptions);
+        });
+
     </script>
 </body>
 </html>

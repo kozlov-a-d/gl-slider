@@ -59,6 +59,11 @@ export default class Slider {
             }
         };
         this.options = helper.mergeDeep(this.defaults, options);
+        this.animate = {
+            isActive: false,
+            currTime: 0,
+            totalTime: this.options.animationSpeed
+        };
 
         let self = this;  // save this context
 
@@ -83,14 +88,33 @@ export default class Slider {
             self.itemActive = self.options.startItem; // задаём начальный слайд
             self.generateArrow();
             self.generateDots();
-            self.slide(0, 0, 1, 0); // инициализируем начальный слайд
+            self.slide(0, 0, 1, 1); // инициализируем начальный слайд
 
             let then = 0;
             // Draw the scene repeatedly
             function render(now) {
-                now *= 0.001;  // convert to seconds
+                // now *= 0.001;  // convert to seconds
                 let deltaTime = now - then;
                 then = now;
+
+                if(self.animate.isActive){
+                    self.animate.currTime += deltaTime;
+                    self.variables.progress = self.animate.currTime/self.animate.totalTime;
+                }
+                if( self.variables.progress >= 1 ){
+                    self.variables.progress = 0;
+                    self.animate.isActive = false;
+                    self.changeImage(self.itemActive, self.itemActive, null);
+
+                    if (self.options.dots) {
+                        self.html.dots.querySelectorAll('button').forEach(element=>{
+                            element.classList.remove('is-active');
+                            if(parseInt(element.dataset.dotNumber) === self.itemActive ){
+                                element.classList.add('is-active');
+                            }
+                        });
+                    }
+                }
 
                 webglUtil.drawScene(self.gl, self.items, self.itemActive, self.geometrySize, self.variables, self.programInfo, self.buffers, deltaTime);
 
@@ -103,8 +127,20 @@ export default class Slider {
             }
 
             self.html.root.dataset.initialized = 'true';
-
         });
+    }
+
+    /**
+     * Update plugin options and shader program
+     * @param options
+     */
+    update(options) {
+        this.options = helper.mergeDeep(this.defaults, options);
+        this.programInfo = webglUtil.initShaderProgram(
+            this.gl,
+            shaders.vertex.base(),
+            webglUtil.combineFragmentShader(this.options.effects)
+        );
     }
 
     /**
@@ -153,74 +189,34 @@ export default class Slider {
         this.items.sort(compareIndex);
     }
 
+    changeImage(curr, next, dir) {
+        // Tell WebGL we want to affect texture unit 0
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        // Bind the texture to texture unit 0
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.items[curr].texture);
+        // Tell WebGL we want to affect texture unit 1
+        this.gl.activeTexture(this.gl.TEXTURE1);
+        // Bind the texture to texture unit 0
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.items[next].texture);
+    }
+
     // TODO: усложнить логику, сейчас только loop, а может быть не зацикленный слайдер
     /**
      * Общая функция для перехода между слайдами
      */
     slide(curr, next, dir, time) {
-
         let self = this;  // save this context
 
         time = (time >= 0) ? time : this.options.animationSpeed;
 
-        if (time === 0) {
-            changeImage(curr, curr, dir);
-            self.variables.progress = 0;
-            self.itemActive = next;
-        } else {
-            changeImage(curr, next, dir);
+        self.changeImage(curr, next, dir);
 
-            animateNumber(self.variables.progress, 0, 1, time, function () {
-                changeImage(next, next, dir);
-                self.variables.progress = 0;
-                self.itemActive = next;
+        self.animate.isActive = true;
+        self.animate.currTime = 0;
+        self.animate.totalTime = time;
+        self.variables.progress = 0; // progress calculation is in requestAnimationFrame
 
-                if (self.options.dots) {
-                    self.html.root.querySelectorAll('[data-dot-number]').forEach(element=>{
-                        element.classList.remove('is-active');
-                    });
-                    self.html.root.querySelector('[data-dot-number=' + self.itemActive + ']').classList.add('is-active');
-                }
-
-            });
-
-        }
-
-        function animateNumber(where, from, to, time, cb) {
-            // let start = new Date().getTime();
-            //
-            // function delta(_progress) {
-            //     return Math.pow(_progress, 2);
-            // }
-            //
-            // setTimeout(function () {
-            //     let now = (new Date().getTime()) - start;
-            //     let _progress = now / time;
-            //     let result = (to - from) * delta(_progress) + from;
-            //     self.variables.progress = (result > 1) ? 1 : result;
-            //
-            //     if (_progress < 1) {
-            //         setTimeout(arguments.callee, 5);
-            //     } else {
-            //         cb();
-            //     }
-            // }, 10);
-
-        }
-
-        function changeImage(curr, next, dir) {
-            console.log('curr', self.items[curr]);
-            console.log('next', self.items[next]);
-            // Tell WebGL we want to affect texture unit 0
-            self.gl.activeTexture(self.gl.TEXTURE0);
-            // Bind the texture to texture unit 0
-            self.gl.bindTexture(self.gl.TEXTURE_2D, self.items[curr].texture);
-            // Tell WebGL we want to affect texture unit 1
-            self.gl.activeTexture(self.gl.TEXTURE1);
-            // Bind the texture to texture unit 0
-            self.gl.bindTexture(self.gl.TEXTURE_2D, self.items[next].texture);
-        }
-
+        self.itemActive = next;
     }
 
     /**
@@ -228,8 +224,9 @@ export default class Slider {
      * @param number - next item
      */
     slideTo(number) {
-        if (0 <= number && number < this.items.length) {
-            this.slide(this.itemActive, number, 1);
+        let self = this;  // save this context
+        if (0 <= number && number < self.items.length) {
+            self.slide(self.itemActive, number, 1);
         }
     }
 
@@ -262,24 +259,25 @@ export default class Slider {
             handlersUtil.addHandlersNavigationArrows({
                 prev: this.html.arrows.prev,
                 prevAction: function () {
-                    self.slidePrev()
+                    self.slidePrev();
                 },
                 next: this.html.arrows.next,
                 nextAction: function () {
-                    self.slideNext
+                    self.slideNext();
                 }
             });
         }
     }
 
     generateDots(){
+        let self = this;  // save this context
         if (this.options.dots) {
             this.html.dots = htmlUtil.createDots(this.html.root, this.items, this.options.startItem);
+            self.html.dots.querySelectorAll('button').forEach(element=>{
+                handlersUtil.addHandlersNavigationDots(element, function () {
+                    self.slideTo(parseInt(element.dataset.dotNumber));
+                });
+            });
         }
-    }
-
-    test() {
-        console.log('I\'m slider');
-        console.log(this.options);
     }
 }

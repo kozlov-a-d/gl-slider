@@ -1,5 +1,5 @@
 import {  shaders } from '../shaders/shaders';
-import * as  mat4 from  './matrix/mat4';
+import * as  mat4 from './mat4.util';
 
 /**
  * Initialize WebGl context
@@ -43,7 +43,7 @@ export function initShaderProgram(gl, vertexShaderSource, fragmentShaderSource) 
         throw ('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
     }
 
-    return programInfo = {
+    return {
         program: shaderProgram,
         attribLocations: {
             vertexPosition: gl.getAttribLocation(shaderProgram, 'a_position'),
@@ -300,11 +300,8 @@ export function resize(gl, variables) {
     }
 }
 
-export function drawScene(gl, items, itemActive, geometrySize, variables, programInfo, buffers,  deltaTime) {
+export function drawScene(gl, items, itemActive, geometrySize, variables, programInfo, buffers) {
 
-    // console.log(deltaTime);
-    // variables.time += deltaTime;
-    // console.log(variables.time);
     resize(gl, variables);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
