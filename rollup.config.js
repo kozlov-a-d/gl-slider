@@ -1,9 +1,10 @@
 export default {
     input: 'src/scripts/main.js',
+    external: [ 'gl-matrix (' ],
     output: [
 		{
 			format: 'umd',
-			name: 'glslSlider',
+			name: 'SliderGLSL',
 			file: 'build/main.js',
 			indent: '\t'
 		},

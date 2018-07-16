@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <div class="slider">
+    <div class="slider" id="slider">
         <div class="slider__item" data-item><img src="images/img1.jpg" alt=""></div>
         <div class="slider__item" data-item><img src="images/img2.jpg" alt=""></div>
         <div class="slider__item" data-item><img src="images/img4.jpg" alt=""></div>
@@ -19,10 +19,17 @@
         <div class="slider__item" data-item><img src="images/img10.jpg" alt=""></div>
         <div class="slider__item" data-item><img src="images/girl-2.jpg" alt=""></div>
     </div>
-    
+
     <script src="../build/main.js"></script>
     <script>
-        let slider = new glslSlider();
+        let slider = new SliderGLSL(document.getElementById('slider'), {
+            dots: true,
+            animationSpeed: 800,
+            effects: {
+                filter: 'base',        // base | monochrome | negative | sepia
+                slide: 'wave'      // base | zoomBlur | fragmentParalax | wave
+            }
+        });
         slider.test();
     </script>
 </body>

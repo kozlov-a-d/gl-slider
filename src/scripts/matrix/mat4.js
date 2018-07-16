@@ -1,266 +1,3 @@
-let vertexBase = function(){
-    return ''+
-    'attribute vec4 a_position; \n'+         // положение прямоугольника?
-    'attribute vec2 a_texcoord; \n'+     // положение текстуры?
-
-    'uniform mat4 uProjectionMatrix; \n'+          // состояние перехода между слайдами
-    'uniform mat4 uModelViewMatrix; \n'+          // состояние перехода между слайдами
-    'uniform float u_progress; \n'+
-    'uniform float u_time; \n'+              // время
-    // 'uniform vec2  u_mouse; \n'+             // положение курсора мыши в пикселях относительно блока
-    'uniform vec2  u_blockRatio; \n'+         // коэффициенты размеров блока
-    'uniform vec2  u_texRatio0; \n'+      // коэффициенты размеров картинки
-
-    'varying vec2 uv; \n' +
-    'varying highp vec2 v_texcoord; \n' +
-    'varying vec2 v_position; \n' +
-    'varying float v_progress; \n'+          // состояние перехода между слайдами
-    'varying float v_time; \n'+              // время
-    // 'varying vec2  v_mouse; \n'+             // положение курсора мыши [0...1], меняется центр координат
-
-
-    'void main() { \n'+
-
-        'uv = vec2( a_texcoord.x , ( 1. - a_texcoord.y) );\n' +
-        'vec2 vUv = (( uv - 0.5 ) / u_blockRatio.xy / u_texRatio0.xy ) +  0.5;\n' +
-
-        'v_texcoord = vUv;' +
-        'v_position = a_position.xy;' +
-        'v_progress = u_progress; \n'+
-        // 'v_time = u_time; \n'+
-        'gl_Position = uProjectionMatrix * uModelViewMatrix * a_position;' +
-    '}'
-};
-
-let fragmentBase = function(effects){
-    // console.log(effects);
-    return '' +
-    '#ifdef GL_ES \n' +
-    'precision mediump float; \n' +
-    '#endif \n' +
-
-    'uniform highp sampler2D uSampler0; \n' +
-    'uniform highp sampler2D uSampler1; \n' +
-
-    'varying vec2 uv; \n' +
-    'varying highp vec2 v_texcoord; \n' +
-    'varying vec2 v_position; \n' +
-    'varying float v_progress; \n'+          // состояние перехода между слайдами
-    'varying float v_time; \n'+              // время
-    // 'varying vec2  v_mouse; \n'+             // положение курсора мыши [0...1], меняется центр координат
-
-    effects.filter.function +
-    effects.slide.main +
-
-    'void main(void) { \n' +
-        // 'gl_FragColor = vec4(0.9, 0.5, 0.5, 1.0); \n' +
-        // 'gl_FragColor = vec4( v_texcoord , 0.5, 1.0); \n' +
-        // 'gl_FragColor = texture2D(u_image0, vec2(v_texcoord.s, v_texcoord.t)); \n' +
-        // 'gl_FragColor = texture2D(uSampler0, v_texcoord ); \n' +
-
-        'vec4 drawColor = vec4(0.5, 0.5, 0.5, 1.0); \n' +
-        effects.slide.draw + // тут результат эффетка перехода записывается в drawColor
-        'gl_FragColor = filter( drawColor ); \n' +
-
-    '}'
-};
-
-let fragmentFilterBase = function(){
-    return {
-        function: ''+
-        'vec4 filter(vec4 color) { \n' +
-            'return color; \n' +
-        '} \n'
-    }
-};
-
-let fragmentFilterMonochrome = function(){
-    return {
-        function: ''+
-        'vec4 filter(vec4 color) { \n' +
-            'float middle = ( 3.*color.r + 6.*color.g + color.b )/10.; \n' +
-            'color = vec4(middle, middle, middle, 1.); \n' +
-            'return color; \n' +
-        '} \n'
-    }
-};
-
-let fragmentFilterSepia = function(){
-    return {
-        function: ''+
-        'vec4 filter(vec4 color) { \n' +
-            'vec4 origin = color; \n' +
-            'color.r = origin.r*0.393 + origin.g*0.769 + origin.b*0.189; \n' +
-            'color.g = origin.r*0.349 + origin.g*0.686 + origin.b*0.168; \n' +
-            'color.b = origin.r*0.272 + origin.g*0.534 + origin.b*0.131; \n' +
-            'return color; \n' +
-        '} \n'
-    }
-};
-
-let fragmentFilterNegative = function(){
-    return {
-        function: ''+
-        'vec4 filter(vec4 color) { \n' +
-            'color = vec4(1.-color.r, 1.-color.g, 1.-color.b, 1.); \n' +
-            'return color; \n' +
-        '} \n'
-    }
-};
-
-let fragmentSlideBase = function(isIdle){
-    isIdle = ( typeof isIdle === 'undefined') ? false : isIdle;
-    return {
-        main: '',
-        draw:  ''+
-        ( (isIdle)
-                ? 'vec4 colorCurr = idle(u_image0, v_texcoord); \n' +
-                'vec4 colorNext = idle(u_image1, v_texcoord); \n'
-                : ''+
-                'vec4 colorCurr = texture2D(uSampler0, v_texcoord); \n' +
-                'vec4 colorNext = texture2D(uSampler1, v_texcoord); \n'
-        ) +
-        'drawColor = colorCurr * (1. - v_progress) + colorNext * v_progress; \n'
-    }
-};
-
-let fragmentSlideWave = function(isIdle){
-    isIdle = ( typeof isIdle === 'undefined') ? false : isIdle;
-    return {
-        main: '' +
-        'vec2 mirrored(vec2 v) { \n' +
-            'vec2 m = mod(v,2.); \n' +
-            'return mix(m,2.0 - m, step(1.0 ,m)); \n' +
-        '} \n' +
-
-        'float tri(float p) { \n' +
-            'return mix(p,1.0 - p, step(0.5 ,p))*2.; \n' +
-        '} \n',
-        draw: ''+
-
-
-        'vec2 accel = vec2(0.5,2); \n' +
-
-        // 'vec2 uv = v_texcoord; \n' +
-        'vec2 uv = gl_FragCoord.xy/vec2(974.); \n' +
-
-        'float p = fract(v_progress); \n' +
-
-        'float delayValue = p*7. - uv.y*2. + uv.x - 2.; \n' +
-
-        'delayValue = clamp(delayValue,0.,1.); \n' +
-
-        'vec2 translateValue = p + delayValue*accel; \n' +
-        'vec2 translateValue1 = vec2(-0.5,1.)* translateValue; \n' +
-        'vec2 translateValue2 = vec2(-0.5,1.)* (translateValue - 1. - accel); \n' +
-
-        'vec2 w = sin( sin(v_time)*vec2(0,0.3) + v_texcoord.yx*vec2(0,4.))*vec2(0,0.5); \n' +
-        'vec2 xy = w*(tri(p)*0.5 + tri(delayValue)*0.5); \n' +
-
-        'vec2 uv1 = v_texcoord + translateValue1 + xy; \n' +
-        'vec2 uv2 = v_texcoord + translateValue2 + xy; \n' +
-
-        'vec4 rgba1 = texture2D(uSampler0,mirrored(uv1)); \n' +
-        'vec4 rgba2 = texture2D(uSampler1,mirrored(uv2)); \n' +
-
-        'vec4 rgba = mix(rgba1,rgba2,delayValue); \n' +
-        'drawColor = rgba; \n'
-    }
-};
-
-let fragmentSlideZoomBlur = function(isIdle){
-    isIdle = ( typeof isIdle === 'undefined') ? false : isIdle;
-    return {
-        main: ''+
-        'float random(vec3 scale, float seed) { \n' +
-            'return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758. + seed); \n' +
-        '} \n' +
-
-        'vec4 slide(sampler2D image, vec2 textureCoord, float progress) { \n' +
-            'vec4 color = vec4(0.0); \n' +
-            'float total = 0.0; \n' +
-            'float strength = 20. * progress; \n' +
-            'vec2  center = vec2(0.5); \n' +
-            'vec2 toCenter = center - v_texcoord; \n' +
-            'float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0); \n' +
-            'float texSize = 20.; \n' +
-
-            'for (float t = 0.0; t <= 40.0; t++) { \n' +
-                'float percent = (t + offset) / 40.0; \n' +
-                'float weight = 4.0 * (percent - percent * percent); \n' +
-                'vec4 sample = texture2D(image, v_texcoord + toCenter * percent * strength / texSize); \n' +
-                'sample.rgb *= sample.a; \n' +
-                'color += sample * weight; \n' +
-                'total += weight; \n' +
-            '} \n' +
-
-            'return color / total; \n' +
-        '} \n',
-        draw: ''+
-        'vec4 colorCurr = slide(uSampler0, v_texcoord, v_progress); \n' +
-        'vec4 colorNext = slide(uSampler1, v_texcoord, 1. - v_progress); \n' +
-
-        'drawColor = colorCurr*(1. - v_progress) + colorNext*v_progress; \n'
-    }
-};
-
-let fragmentSlideFragmentparalax = function(isIdle){
-    isIdle = ( typeof isIdle === 'undefined') ? false : isIdle;
-    return {
-        main: '' +
-        'vec4 slide(sampler2D image, vec2 textureCoord, vec2 position, float progress, vec2 vUv1, float dir, float second) { \n' +
-            'float dx = progress*0.8; \n' +
-            'float vert = abs(progress*0.3); \n' +
-            'dx -= step(0.2 - second*vert,position.x/2.)*0.3*progress; \n' +
-            'dx -= step(0.4 - second*vert,position.x/2.)*0.3*progress; \n' +
-            'dx += step(0.6 - second*vert,position.x/2.)*0.3*progress; \n' +
-            'dx += step(0.8 - second*vert,position.x/2.)*0.3*progress; \n' +
-            'vec4 tex = texture2D(image,vec2(vUv1.x + second*dx,vUv1.y)); \n' +
-            'float bounds = step(0., 1. - (textureCoord.x/2. + second*progress))*step(0., textureCoord.x/2. + second*progress); \n' +
-
-            'return tex*bounds; \n' +
-        '} \n',
-        draw:  ''+
-        'vec2 uv = v_texcoord; \n' +
-
-        'vec2 vUv = uv; \n' +
-        'vec2 _uv = uv - 0.5; \n' +
-        'vec2 vUv1 = _uv; \n' +
-        'vUv1 *= vec2(1., 1.); \n' +
-        'vUv1 += 0.5; \n' +
-
-        'vec2 position = step(0.,v_progress)*uv + step(0.,-v_progress)*(1. - uv); \n' +
-
-        'vec4 colorCurr = slide(uSampler0, v_texcoord, position, v_progress, vUv1, 1., 1.); \n' +
-        'vec4 colorNext = slide(uSampler1, v_texcoord, position, 1. - v_progress, vUv1, 1., -1.); \n' +
-        'drawColor = colorCurr + colorNext; \n'
-    }
-};
-
-// Vertex base shader
-
-
-let shaders = {
-    vertex: {
-        base: vertexBase
-    },
-    fragment: {
-        base: fragmentBase,
-        filters: {
-            base: fragmentFilterBase,
-            monochrome: fragmentFilterMonochrome,
-            negative: fragmentFilterNegative,
-            sepia: fragmentFilterSepia
-        },
-        slide: {
-            base: fragmentSlideBase,
-            fragmentParalax: fragmentSlideFragmentparalax,
-            wave: fragmentSlideWave,
-            zoomBlur: fragmentSlideZoomBlur
-        }
-    }
-};
-
 /**
  * @fileoverview gl-matrix - High performance matrix and vector operations
  * @author Brandon Jones
@@ -283,23 +20,7 @@ HE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABIL
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE. */
 
-/**
- * Common utilities
- * @module glMatrix
- */
-
-// Configuration Constants
-const EPSILON = 0.000001;
-let ARRAY_TYPE = (typeof Float32Array !== 'undefined') ? Float32Array : Array;
-
-const degree = Math.PI / 180;
-
-/**
- * @fileoverview gl-matrix - High performance matrix and vector operations
- * @author Brandon Jones
- * @author Colin MacKenzie IV
- * @version 2.7.0
- */
+import * as glMatrix from "./common.js";
 /**
  * 4x4 Matrix<br>Format: column-major, when typed out it looks like row-major<br>The matrices are being post multiplied.
  * @module mat4
@@ -310,9 +31,9 @@ const degree = Math.PI / 180;
  *
  * @returns {mat4} a new 4x4 matrix
  */
-function create() {
-    let out = new ARRAY_TYPE(16);
-    if(ARRAY_TYPE != Float32Array) {
+export function create() {
+    let out = new glMatrix.ARRAY_TYPE(16);
+    if(glMatrix.ARRAY_TYPE != Float32Array) {
         out[1] = 0;
         out[2] = 0;
         out[3] = 0;
@@ -339,8 +60,8 @@ function create() {
  * @param {mat4} a matrix to clone
  * @returns {mat4} a new 4x4 matrix
  */
-function clone(a) {
-    let out = new ARRAY_TYPE(16);
+export function clone(a) {
+    let out = new glMatrix.ARRAY_TYPE(16);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -367,7 +88,7 @@ function clone(a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-function copy(out, a) {
+export function copy(out, a) {
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -408,8 +129,8 @@ function copy(out, a) {
  * @param {Number} m33 Component in column 3, row 3 position (index 15)
  * @returns {mat4} A new mat4
  */
-function fromValues(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
-    let out = new ARRAY_TYPE(16);
+export function fromValues(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+    let out = new glMatrix.ARRAY_TYPE(16);
     out[0] = m00;
     out[1] = m01;
     out[2] = m02;
@@ -451,7 +172,7 @@ function fromValues(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, 
  * @param {Number} m33 Component in column 3, row 3 position (index 15)
  * @returns {mat4} out
  */
-function set(out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+export function set(out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
     out[0] = m00;
     out[1] = m01;
     out[2] = m02;
@@ -478,7 +199,7 @@ function set(out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m3
  * @param {mat4} out the receiving matrix
  * @returns {mat4} out
  */
-function identity(out) {
+export function identity(out) {
     out[0] = 1;
     out[1] = 0;
     out[2] = 0;
@@ -505,7 +226,7 @@ function identity(out) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-function transpose(out, a) {
+export function transpose(out, a) {
     // If we are transposing ourselves we can skip a few steps but have to cache some values
     if (out === a) {
         let a01 = a[1], a02 = a[2], a03 = a[3];
@@ -553,7 +274,7 @@ function transpose(out, a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-function invert(out, a) {
+export function invert(out, a) {
     let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
     let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
     let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
@@ -607,7 +328,7 @@ function invert(out, a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-function adjoint(out, a) {
+export function adjoint(out, a) {
     let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
     let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
     let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
@@ -638,7 +359,7 @@ function adjoint(out, a) {
  * @param {mat4} a the source matrix
  * @returns {Number} determinant of a
  */
-function determinant(a) {
+export function determinant(a) {
     let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
     let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
     let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
@@ -669,7 +390,7 @@ function determinant(a) {
  * @param {mat4} b the second operand
  * @returns {mat4} out
  */
-function multiply(out, a, b) {
+export function multiply(out, a, b) {
     let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
     let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
     let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
@@ -710,7 +431,7 @@ function multiply(out, a, b) {
  * @param {vec3} v vector to translate by
  * @returns {mat4} out
  */
-function translate(out, a, v) {
+export function translate(out, a, v) {
     let x = v[0], y = v[1], z = v[2];
     let a00, a01, a02, a03;
     let a10, a11, a12, a13;
@@ -747,7 +468,7 @@ function translate(out, a, v) {
  * @param {vec3} v the vec3 to scale the matrix by
  * @returns {mat4} out
  **/
-function scale(out, a, v) {
+export function scale(out, a, v) {
     let x = v[0], y = v[1], z = v[2];
 
     out[0] = a[0] * x;
@@ -778,7 +499,7 @@ function scale(out, a, v) {
  * @param {vec3} axis the axis to rotate around
  * @returns {mat4} out
  */
-function rotate(out, a, rad, axis) {
+export function rotate(out, a, rad, axis) {
     let x = axis[0], y = axis[1], z = axis[2];
     let len = Math.sqrt(x * x + y * y + z * z);
     let s, c, t;
@@ -789,7 +510,7 @@ function rotate(out, a, rad, axis) {
     let b10, b11, b12;
     let b20, b21, b22;
 
-    if (len < EPSILON) { return null; }
+    if (len < glMatrix.EPSILON) { return null; }
 
     len = 1 / len;
     x *= len;
@@ -840,7 +561,7 @@ function rotate(out, a, rad, axis) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-function rotateX(out, a, rad) {
+export function rotateX(out, a, rad) {
     let s = Math.sin(rad);
     let c = Math.cos(rad);
     let a10 = a[4];
@@ -883,7 +604,7 @@ function rotateX(out, a, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-function rotateY(out, a, rad) {
+export function rotateY(out, a, rad) {
     let s = Math.sin(rad);
     let c = Math.cos(rad);
     let a00 = a[0];
@@ -926,7 +647,7 @@ function rotateY(out, a, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-function rotateZ(out, a, rad) {
+export function rotateZ(out, a, rad) {
     let s = Math.sin(rad);
     let c = Math.cos(rad);
     let a00 = a[0];
@@ -972,7 +693,7 @@ function rotateZ(out, a, rad) {
  * @param {vec3} v Translation vector
  * @returns {mat4} out
  */
-function fromTranslation(out, v) {
+export function fromTranslation(out, v) {
     out[0] = 1;
     out[1] = 0;
     out[2] = 0;
@@ -1003,7 +724,7 @@ function fromTranslation(out, v) {
  * @param {vec3} v Scaling vector
  * @returns {mat4} out
  */
-function fromScaling(out, v) {
+export function fromScaling(out, v) {
     out[0] = v[0];
     out[1] = 0;
     out[2] = 0;
@@ -1035,12 +756,12 @@ function fromScaling(out, v) {
  * @param {vec3} axis the axis to rotate around
  * @returns {mat4} out
  */
-function fromRotation(out, rad, axis) {
+export function fromRotation(out, rad, axis) {
     let x = axis[0], y = axis[1], z = axis[2];
     let len = Math.sqrt(x * x + y * y + z * z);
     let s, c, t;
 
-    if (len < EPSILON) { return null; }
+    if (len < glMatrix.EPSILON) { return null; }
 
     len = 1 / len;
     x *= len;
@@ -1082,7 +803,7 @@ function fromRotation(out, rad, axis) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-function fromXRotation(out, rad) {
+export function fromXRotation(out, rad) {
     let s = Math.sin(rad);
     let c = Math.cos(rad);
 
@@ -1117,7 +838,7 @@ function fromXRotation(out, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-function fromYRotation(out, rad) {
+export function fromYRotation(out, rad) {
     let s = Math.sin(rad);
     let c = Math.cos(rad);
 
@@ -1152,7 +873,7 @@ function fromYRotation(out, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-function fromZRotation(out, rad) {
+export function fromZRotation(out, rad) {
     let s = Math.sin(rad);
     let c = Math.cos(rad);
 
@@ -1191,7 +912,7 @@ function fromZRotation(out, rad) {
  * @param {vec3} v Translation vector
  * @returns {mat4} out
  */
-function fromRotationTranslation(out, q, v) {
+export function fromRotationTranslation(out, q, v) {
     // Quaternion math
     let x = q[0], y = q[1], z = q[2], w = q[3];
     let x2 = x + x;
@@ -1235,8 +956,8 @@ function fromRotationTranslation(out, q, v) {
  * @param {quat2} a Dual Quaternion
  * @returns {mat4} mat4 receiving operation result
  */
-function fromQuat2(out, a) {
-    let translation = new ARRAY_TYPE(3);
+export function fromQuat2(out, a) {
+    let translation = new glMatrix.ARRAY_TYPE(3);
     let bx = -a[0], by = -a[1], bz = -a[2], bw = a[3],
         ax = a[4], ay = a[5], az = a[6], aw = a[7];
 
@@ -1264,7 +985,7 @@ function fromQuat2(out, a) {
  * @param  {mat4} mat Matrix to be decomposed (input)
  * @return {vec3} out
  */
-function getTranslation(out, mat) {
+export function getTranslation(out, mat) {
     out[0] = mat[12];
     out[1] = mat[13];
     out[2] = mat[14];
@@ -1282,7 +1003,7 @@ function getTranslation(out, mat) {
  * @param  {mat4} mat Matrix to be decomposed (input)
  * @return {vec3} out
  */
-function getScaling(out, mat) {
+export function getScaling(out, mat) {
     let m11 = mat[0];
     let m12 = mat[1];
     let m13 = mat[2];
@@ -1309,7 +1030,7 @@ function getScaling(out, mat) {
  * @param {mat4} mat Matrix to be decomposed (input)
  * @return {quat} out
  */
-function getRotation(out, mat) {
+export function getRotation(out, mat) {
     // Algorithm taken from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
     let trace = mat[0] + mat[5] + mat[10];
     let S = 0;
@@ -1360,7 +1081,7 @@ function getRotation(out, mat) {
  * @param {vec3} s Scaling vector
  * @returns {mat4} out
  */
-function fromRotationTranslationScale(out, q, v, s) {
+export function fromRotationTranslationScale(out, q, v, s) {
     // Quaternion math
     let x = q[0], y = q[1], z = q[2], w = q[3];
     let x2 = x + x;
@@ -1420,7 +1141,7 @@ function fromRotationTranslationScale(out, q, v, s) {
  * @param {vec3} o The origin vector around which to scale and rotate
  * @returns {mat4} out
  */
-function fromRotationTranslationScaleOrigin(out, q, v, s, o) {
+export function fromRotationTranslationScaleOrigin(out, q, v, s, o) {
     // Quaternion math
     let x = q[0], y = q[1], z = q[2], w = q[3];
     let x2 = x + x;
@@ -1483,7 +1204,7 @@ function fromRotationTranslationScaleOrigin(out, q, v, s, o) {
  *
  * @returns {mat4} out
  */
-function fromQuat(out, q) {
+export function fromQuat(out, q) {
     let x = q[0], y = q[1], z = q[2], w = q[3];
     let x2 = x + x;
     let y2 = y + y;
@@ -1534,7 +1255,7 @@ function fromQuat(out, q) {
  * @param {Number} far Far bound of the frustum
  * @returns {mat4} out
  */
-function frustum(out, left, right, bottom, top, near, far) {
+export function frustum(out, left, right, bottom, top, near, far) {
     let rl = 1 / (right - left);
     let tb = 1 / (top - bottom);
     let nf = 1 / (near - far);
@@ -1568,7 +1289,7 @@ function frustum(out, left, right, bottom, top, near, far) {
  * @param {number} far Far bound of the frustum, can be null or Infinity
  * @returns {mat4} out
  */
-function perspective(out, fovy, aspect, near, far) {
+export function perspective(out, fovy, aspect, near, far) {
     let f = 1.0 / Math.tan(fovy / 2), nf;
     out[0] = f / aspect;
     out[1] = 0;
@@ -1606,7 +1327,7 @@ function perspective(out, fovy, aspect, near, far) {
  * @param {number} far Far bound of the frustum
  * @returns {mat4} out
  */
-function perspectiveFromFieldOfView(out, fov, near, far) {
+export function perspectiveFromFieldOfView(out, fov, near, far) {
     let upTan = Math.tan(fov.upDegrees * Math.PI/180.0);
     let downTan = Math.tan(fov.downDegrees * Math.PI/180.0);
     let leftTan = Math.tan(fov.leftDegrees * Math.PI/180.0);
@@ -1645,7 +1366,7 @@ function perspectiveFromFieldOfView(out, fov, near, far) {
  * @param {number} far Far bound of the frustum
  * @returns {mat4} out
  */
-function ortho(out, left, right, bottom, top, near, far) {
+export function ortho(out, left, right, bottom, top, near, far) {
     let lr = 1 / (left - right);
     let bt = 1 / (bottom - top);
     let nf = 1 / (near - far);
@@ -1678,7 +1399,7 @@ function ortho(out, left, right, bottom, top, near, far) {
  * @param {vec3} up vec3 pointing up
  * @returns {mat4} out
  */
-function lookAt(out, eye, center, up) {
+export function lookAt(out, eye, center, up) {
     let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
     let eyex = eye[0];
     let eyey = eye[1];
@@ -1690,9 +1411,9 @@ function lookAt(out, eye, center, up) {
     let centery = center[1];
     let centerz = center[2];
 
-    if (Math.abs(eyex - centerx) < EPSILON &&
-        Math.abs(eyey - centery) < EPSILON &&
-        Math.abs(eyez - centerz) < EPSILON) {
+    if (Math.abs(eyex - centerx) < glMatrix.EPSILON &&
+        Math.abs(eyey - centery) < glMatrix.EPSILON &&
+        Math.abs(eyez - centerz) < glMatrix.EPSILON) {
         return identity(out);
     }
 
@@ -1765,7 +1486,7 @@ function lookAt(out, eye, center, up) {
  * @param {vec3} up vec3 pointing up
  * @returns {mat4} out
  */
-function targetTo(out, eye, target, up) {
+export function targetTo(out, eye, target, up) {
     let eyex = eye[0],
         eyey = eye[1],
         eyez = eye[2],
@@ -1814,14 +1535,15 @@ function targetTo(out, eye, target, up) {
     out[14] = eyez;
     out[15] = 1;
     return out;
-}
+};
+
 /**
  * Returns a string representation of a mat4
  *
  * @param {mat4} a matrix to represent as a string
  * @returns {String} string representation of the matrix
  */
-function str(a) {
+export function str(a) {
     return 'mat4(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + a[3] + ', ' +
         a[4] + ', ' + a[5] + ', ' + a[6] + ', ' + a[7] + ', ' +
         a[8] + ', ' + a[9] + ', ' + a[10] + ', ' + a[11] + ', ' +
@@ -1834,7 +1556,7 @@ function str(a) {
  * @param {mat4} a the matrix to calculate Frobenius norm of
  * @returns {Number} Frobenius norm
  */
-function frob(a) {
+export function frob(a) {
     return(Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2) + Math.pow(a[4], 2) + Math.pow(a[5], 2) + Math.pow(a[6], 2) + Math.pow(a[7], 2) + Math.pow(a[8], 2) + Math.pow(a[9], 2) + Math.pow(a[10], 2) + Math.pow(a[11], 2) + Math.pow(a[12], 2) + Math.pow(a[13], 2) + Math.pow(a[14], 2) + Math.pow(a[15], 2) ))
 }
 
@@ -1846,7 +1568,7 @@ function frob(a) {
  * @param {mat4} b the second operand
  * @returns {mat4} out
  */
-function add(out, a, b) {
+export function add(out, a, b) {
     out[0] = a[0] + b[0];
     out[1] = a[1] + b[1];
     out[2] = a[2] + b[2];
@@ -1874,7 +1596,7 @@ function add(out, a, b) {
  * @param {mat4} b the second operand
  * @returns {mat4} out
  */
-function subtract(out, a, b) {
+export function subtract(out, a, b) {
     out[0] = a[0] - b[0];
     out[1] = a[1] - b[1];
     out[2] = a[2] - b[2];
@@ -1902,7 +1624,7 @@ function subtract(out, a, b) {
  * @param {Number} b amount to scale the matrix's elements by
  * @returns {mat4} out
  */
-function multiplyScalar(out, a, b) {
+export function multiplyScalar(out, a, b) {
     out[0] = a[0] * b;
     out[1] = a[1] * b;
     out[2] = a[2] * b;
@@ -1931,7 +1653,7 @@ function multiplyScalar(out, a, b) {
  * @param {Number} scale the amount to scale b's elements by before adding
  * @returns {mat4} out
  */
-function multiplyScalarAndAdd(out, a, b, scale) {
+export function multiplyScalarAndAdd(out, a, b, scale) {
     out[0] = a[0] + (b[0] * scale);
     out[1] = a[1] + (b[1] * scale);
     out[2] = a[2] + (b[2] * scale);
@@ -1958,7 +1680,7 @@ function multiplyScalarAndAdd(out, a, b, scale) {
  * @param {mat4} b The second matrix.
  * @returns {Boolean} True if the matrices are equal, false otherwise.
  */
-function exactEquals(a, b) {
+export function exactEquals(a, b) {
     return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] &&
         a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] &&
         a[8] === b[8] && a[9] === b[9] && a[10] === b[10] && a[11] === b[11] &&
@@ -1972,7 +1694,7 @@ function exactEquals(a, b) {
  * @param {mat4} b The second matrix.
  * @returns {Boolean} True if the matrices are equal, false otherwise.
  */
-function equals$1(a, b) {
+export function equals(a, b) {
     let a0  = a[0],  a1  = a[1],  a2  = a[2],  a3  = a[3];
     let a4  = a[4],  a5  = a[5],  a6  = a[6],  a7  = a[7];
     let a8  = a[8],  a9  = a[9],  a10 = a[10], a11 = a[11];
@@ -1983,900 +1705,32 @@ function equals$1(a, b) {
     let b8  = b[8],  b9  = b[9],  b10 = b[10], b11 = b[11];
     let b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
 
-    return (Math.abs(a0 - b0) <= EPSILON*Math.max(1.0, Math.abs(a0), Math.abs(b0)) &&
-        Math.abs(a1 - b1) <= EPSILON*Math.max(1.0, Math.abs(a1), Math.abs(b1)) &&
-        Math.abs(a2 - b2) <= EPSILON*Math.max(1.0, Math.abs(a2), Math.abs(b2)) &&
-        Math.abs(a3 - b3) <= EPSILON*Math.max(1.0, Math.abs(a3), Math.abs(b3)) &&
-        Math.abs(a4 - b4) <= EPSILON*Math.max(1.0, Math.abs(a4), Math.abs(b4)) &&
-        Math.abs(a5 - b5) <= EPSILON*Math.max(1.0, Math.abs(a5), Math.abs(b5)) &&
-        Math.abs(a6 - b6) <= EPSILON*Math.max(1.0, Math.abs(a6), Math.abs(b6)) &&
-        Math.abs(a7 - b7) <= EPSILON*Math.max(1.0, Math.abs(a7), Math.abs(b7)) &&
-        Math.abs(a8 - b8) <= EPSILON*Math.max(1.0, Math.abs(a8), Math.abs(b8)) &&
-        Math.abs(a9 - b9) <= EPSILON*Math.max(1.0, Math.abs(a9), Math.abs(b9)) &&
-        Math.abs(a10 - b10) <= EPSILON*Math.max(1.0, Math.abs(a10), Math.abs(b10)) &&
-        Math.abs(a11 - b11) <= EPSILON*Math.max(1.0, Math.abs(a11), Math.abs(b11)) &&
-        Math.abs(a12 - b12) <= EPSILON*Math.max(1.0, Math.abs(a12), Math.abs(b12)) &&
-        Math.abs(a13 - b13) <= EPSILON*Math.max(1.0, Math.abs(a13), Math.abs(b13)) &&
-        Math.abs(a14 - b14) <= EPSILON*Math.max(1.0, Math.abs(a14), Math.abs(b14)) &&
-        Math.abs(a15 - b15) <= EPSILON*Math.max(1.0, Math.abs(a15), Math.abs(b15)));
+    return (Math.abs(a0 - b0) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a0), Math.abs(b0)) &&
+        Math.abs(a1 - b1) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a1), Math.abs(b1)) &&
+        Math.abs(a2 - b2) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a2), Math.abs(b2)) &&
+        Math.abs(a3 - b3) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a3), Math.abs(b3)) &&
+        Math.abs(a4 - b4) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a4), Math.abs(b4)) &&
+        Math.abs(a5 - b5) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a5), Math.abs(b5)) &&
+        Math.abs(a6 - b6) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a6), Math.abs(b6)) &&
+        Math.abs(a7 - b7) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a7), Math.abs(b7)) &&
+        Math.abs(a8 - b8) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a8), Math.abs(b8)) &&
+        Math.abs(a9 - b9) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a9), Math.abs(b9)) &&
+        Math.abs(a10 - b10) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a10), Math.abs(b10)) &&
+        Math.abs(a11 - b11) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a11), Math.abs(b11)) &&
+        Math.abs(a12 - b12) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a12), Math.abs(b12)) &&
+        Math.abs(a13 - b13) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a13), Math.abs(b13)) &&
+        Math.abs(a14 - b14) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a14), Math.abs(b14)) &&
+        Math.abs(a15 - b15) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a15), Math.abs(b15)));
 }
 
 /**
  * Alias for {@link mat4.multiply}
  * @function
  */
-const mul = multiply;
+export const mul = multiply;
 
 /**
  * Alias for {@link mat4.subtract}
  * @function
  */
-const sub = subtract;
-
-var mat4 = /*#__PURE__*/Object.freeze({
-	create: create,
-	clone: clone,
-	copy: copy,
-	fromValues: fromValues,
-	set: set,
-	identity: identity,
-	transpose: transpose,
-	invert: invert,
-	adjoint: adjoint,
-	determinant: determinant,
-	multiply: multiply,
-	translate: translate,
-	scale: scale,
-	rotate: rotate,
-	rotateX: rotateX,
-	rotateY: rotateY,
-	rotateZ: rotateZ,
-	fromTranslation: fromTranslation,
-	fromScaling: fromScaling,
-	fromRotation: fromRotation,
-	fromXRotation: fromXRotation,
-	fromYRotation: fromYRotation,
-	fromZRotation: fromZRotation,
-	fromRotationTranslation: fromRotationTranslation,
-	fromQuat2: fromQuat2,
-	getTranslation: getTranslation,
-	getScaling: getScaling,
-	getRotation: getRotation,
-	fromRotationTranslationScale: fromRotationTranslationScale,
-	fromRotationTranslationScaleOrigin: fromRotationTranslationScaleOrigin,
-	fromQuat: fromQuat,
-	frustum: frustum,
-	perspective: perspective,
-	perspectiveFromFieldOfView: perspectiveFromFieldOfView,
-	ortho: ortho,
-	lookAt: lookAt,
-	targetTo: targetTo,
-	str: str,
-	frob: frob,
-	add: add,
-	subtract: subtract,
-	multiplyScalar: multiplyScalar,
-	multiplyScalarAndAdd: multiplyScalarAndAdd,
-	exactEquals: exactEquals,
-	equals: equals$1,
-	mul: mul,
-	sub: sub
-});
-
-/**
- * Initialize WebGl context
- * @param {*} canvas html canvas element
- */
-function initGL(canvas) {
-    let gl;
-    try {
-        gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-    } catch (error) {
-        let msg = "Error creating WebGL context: " + error.toString();
-        throw Error(msg);
-    }
-    if (!gl) {
-        console.warn('webgl not work!');
-        return null;
-    }
-
-    return gl;
-}
-
-/**
- * Initialize a shader program, so WebGL knows how to draw our data
- * @param {WebGLContext} gl
- * @param {string} vertexShaderSource
- * @param {string} fragmentShaderSource
- * @returns {*|WebGLProgram}
- */
-function initShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
-    let vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    let fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
-    // Create the shader program
-    let shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-
-    // If creating the shader program failed, alert
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        throw ('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
-    }
-
-    let programInfo = {
-        program: shaderProgram,
-        attribLocations: {
-            vertexPosition: gl.getAttribLocation(shaderProgram, 'a_position'),
-            textureCoord: gl.getAttribLocation(shaderProgram, 'a_texcoord')
-        },
-        uniformLocations: {
-            projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-            modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-            progress: gl.getUniformLocation(shaderProgram, 'u_progress'),
-            image0: gl.getUniformLocation(shaderProgram, 'uSampler0'),
-            image1: gl.getUniformLocation(shaderProgram, 'uSampler1'),
-            sizeRatio: gl.getUniformLocation(shaderProgram, 'u_blockRatio'),
-            textureRatio0: gl.getUniformLocation(shaderProgram, 'u_texRatio0'),
-            textureRatio1: gl.getUniformLocation(shaderProgram, 'u_texRatio1')
-        }
-    };
-
-    return programInfo;
-}
-
-/**
- * Creates a shader of the given type, uploads the source and compiles it.
- * @param {WebGLContext} gl
- * @param type WebGLShaderType
- * @param source WebGLShaderSource
- * @returns {*|WebGLShader}
- */
-function loadShader(gl, type, source) {
-    let shader = gl.createShader(type);
-
-    // Send the source to the shader object
-    gl.shaderSource(shader, source);
-
-    // Compile the shader program
-    gl.compileShader(shader);
-
-    // See if it compiled successfully
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw ('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
-    }
-
-    return shader;
-}
-
-/**
- * Combine fragment shader code
- * @returns {*} Fragment shader code
- */
-function combineFragmentShader(effects) {
-    let filter = null,
-        slide = null;
-
-    if (shaders.fragment.filters.hasOwnProperty(effects.filter)) {
-        filter = shaders.fragment.filters[effects.filter]();
-    } else {
-        throw ('glslSlider: filter effect ' + effects.filter + ' not found');
-    }
-
-    if (shaders.fragment.slide.hasOwnProperty(effects.slide)) {
-        slide = shaders.fragment.slide[effects.slide]();
-    } else {
-        throw ('glslSlider: slide effect ' + effects.slide + ' not found');
-    }
-
-    return shaders.fragment.base({
-        isIdle: true,
-        filter: filter,
-        slide: slide
-    });
-}
-
-function initBuffers(gl, geometrySize) {
-    let positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    function generateVertexPosition(sizeX, sizeY) {
-        let position = [];
-        let axis = {
-            x: {
-                min: -1.0,
-                max: 1.0
-            },
-            y: {
-                min: -1.0,
-                max: 1.0
-            }
-        };
-
-        axis.x.length = axis.x.max - axis.x.min;
-        axis.y.length = axis.y.max - axis.y.min;
-
-        axis.x.step = axis.x.length / sizeX;
-        axis.y.step = axis.y.length / sizeY;
-
-        for (let y = sizeY - 1; y >= 0; y--) {
-            for (let x = 0; x < sizeX; x++) {
-                let array = [
-                    axis.x.min + (x * axis.x.step), axis.y.min + (y * axis.y.step), 1.0,
-                    axis.x.min + ((x + 1) * axis.x.step), axis.y.min + (y * axis.y.step), 1.0,
-                    axis.x.min + ((x + 1) * axis.x.step), axis.y.min + ((y + 1) * axis.y.step), 1.0,
-                    axis.x.min + (x * axis.x.step), axis.y.min + ((y + 1) * axis.y.step), 1.0
-                ];
-                position = position.concat(array);
-            }
-        }
-
-        return position;
-    }
-
-    let positions = generateVertexPosition(geometrySize.x, geometrySize.y);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    let textureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
-
-    function generateTextureCoord(sizeX, sizeY) {
-        let coords = [];
-        let axis = {
-            x: {
-                min: 0.0,
-                max: 1.0
-            },
-            y: {
-                min: 0.0,
-                max: 1.0
-            }
-        };
-
-        axis.x.length = axis.x.max - axis.x.min;
-        axis.y.length = axis.y.max - axis.y.min;
-
-        axis.x.step = axis.x.length / sizeX;
-        axis.y.step = axis.y.length / sizeY;
-
-        for (let y = sizeY - 1; y >= 0; y--) {
-            for (let x = 0; x < sizeX; x++) {
-                let array = [
-                    axis.x.min + (x * axis.x.step), axis.y.min + (y * axis.y.step),
-                    axis.x.min + ((x + 1) * axis.x.step), axis.y.min + (y * axis.y.step),
-                    axis.x.min + ((x + 1) * axis.x.step), axis.y.min + ((y + 1) * axis.y.step),
-                    axis.x.min + (x * axis.x.step), axis.y.min + ((y + 1) * axis.y.step)
-                ];
-                coords = coords.concat(array);
-            }
-        }
-
-        return coords;
-    }
-
-    let textureCoordinates = generateTextureCoord(geometrySize.x, geometrySize.y);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
-
-    let indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-
-    function generateIndices(sizeX, sizeY) {
-        let indices = [];
-
-        for (let i = 0; i < sizeX * sizeY; i++) {
-            let curr = 4 * i;
-            let array = [
-                curr, curr + 1, curr + 2, curr, curr + 2, curr + 3
-            ];
-            indices = indices.concat(array);
-        }
-
-        return indices;
-    }
-
-    let indices = generateIndices(geometrySize.x, geometrySize.y);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-
-    return {
-        position: positionBuffer,
-        textureCoord: textureCoordBuffer,
-        indices: indexBuffer
-    };
-}
-
-function loadTexture(gl, url, index, callback) {
-    let texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
-
-    let image = new Image();
-    let _ratio = {
-        x: 1,
-        y: 1
-    };
-    image.onload = function () {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-            gl.generateMipmap(gl.TEXTURE_2D);
-        } else {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        }
-
-
-        if (image.naturalWidth > image.naturalHeight) {
-            _ratio.x = image.naturalWidth / image.naturalHeight;
-        } else {
-            _ratio.y = image.naturalHeight / image.naturalWidth;
-        }
-
-        callback('done');
-    };
-    image.onerror = function () {
-        throw ('glslSlider: cannot load image ' + url);
-    };
-    if (url.origin !== window.location.origin) {
-        image.crossOrigin = "";
-    }
-    image.src = url;
-
-    return {
-        index: index,
-        type: 'img',
-        size: [image.naturalWidth, image.naturalHeight],
-        ratio: _ratio,
-        texture: texture
-    };
-}
-
-function isPowerOf2(value) {
-    return (value & (value - 1)) === 0;
-}
-
-/**
- * Calculate size and proportions of canvas
- */
-function resize(gl, variables) {
-    let width = gl.canvas.clientWidth;
-    let height = gl.canvas.clientHeight;
-    if (gl.canvas.width !== width || gl.canvas.height !== height) {
-
-        gl.canvas.width = width;
-        gl.canvas.height = height;
-
-        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-        variables.canvasSize.width = gl.canvas.clientWidth;
-        variables.canvasSize.height = gl.canvas.clientHeight;
-
-        if (variables.canvasSize.width >= variables.canvasSize.height) {
-            variables.canvasRatio.width = 1;
-            variables.canvasRatio.height = variables.canvasSize.width / variables.canvasSize.height;
-        } else {
-            variables.canvasRatio.height = 1;
-            variables.canvasRatio.width = variables.canvasSize.height / variables.canvasSize.width;
-        }
-    }
-}
-
-function drawScene(gl, items, itemActive, geometrySize, variables, programInfo, buffers,  deltaTime) {
-
-    // console.log(deltaTime);
-    // variables.time += deltaTime;
-    // console.log(variables.time);
-    resize(gl, variables);
-
-    console.log(mat4);
-
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
-    gl.clearDepth(1.0);                 // Clear everything
-    gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-    gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
-
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-    // Clear the canvas before we start drawing on it.
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    let fieldOfView = 48 * Math.PI / 180;   // in radians
-    let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    let zNear = 0.1;
-    let zFar = 100.0;
-    let projectionMatrix = create();
-
-    // note: glmatrix.js always has the first argument as the destination to receive the result.
-    perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-
-    // Set the drawing position to the "identity" point, which is the center of the scene.
-    let modelViewMatrix = create();
-    let planeRotation = 0.0;
-    // Now move the drawing position a bit to where we want to start drawing the square.
-    translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -3.2]);           // amount to translate
-    rotate(modelViewMatrix, modelViewMatrix, planeRotation, [0, 0, 1]);       // axis to rotate around (Z)
-    rotate(modelViewMatrix, modelViewMatrix, planeRotation * .7, [0, 1, 0]);  // axis to rotate around (X)
-
-    // Scale along axis X
-    let koefX = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    scale(modelViewMatrix, modelViewMatrix, [koefX, 1, 1]);
-
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertexPosition attribute
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-    gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-
-    // Tell WebGL how to pull out the texture coordinates from
-    // the texture coordinate buffer into the textureCoord attribute.
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
-    gl.vertexAttribPointer(programInfo.attribLocations.textureCoord, 2, gl.FLOAT, false,  0,  0);
-    gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
-
-    // Tell WebGL which indices to use to index the vertices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
-    // Tell WebGL to use our program when drawing
-    gl.useProgram(programInfo.program);
-
-    // Set the shader uniforms
-    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-    gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-
-    // Specify the texture to map onto the faces.
-    gl.uniform1i(programInfo.uniformLocations.image0, 0);
-    gl.uniform1i(programInfo.uniformLocations.image1, 1);
-
-    gl.uniform2f(programInfo.uniformLocations.textureRatio0, items[itemActive].ratio.x, items[itemActive].ratio.y);
-    gl.uniform1f(programInfo.uniformLocations.progress, variables.progress);
-    gl.uniform2f(programInfo.uniformLocations.textureRatio0,  items[itemActive].ratio.x, items[itemActive].ratio.y);
-    gl.uniform2f(programInfo.uniformLocations.sizeRatio, variables.canvasRatio.width, variables.canvasRatio.height);
-
-    gl.drawElements(gl.TRIANGLES, geometrySize.x * geometrySize.y * 6, gl.UNSIGNED_SHORT, 0);
-}
-
-/**
- * Add handlers
- */
-function addHandlersCanvas(el, variables) {
-    addHandlerOnMouseEnter(el, variables);
-    addHandlerOnMouseOut(el, variables);
-    addHandlerOnMouseMove(el, variables);
-}
-
-function addHandlerOnMouseEnter(el, variables) {
-    el.addEventListener('mouseenter', function(e){
-        variables.mouse.state = 'enter';
-        variables.mouse.x = e.offsetX;
-        variables.mouse.y = e.offsetY;
-    });
-}
-
-function addHandlerOnMouseOut(el, variables) {
-    el.addEventListener('mouseout', function(e){
-        variables.mouse.state = 'out';
-        variables.mouse.x = e.offsetX;
-        variables.mouse.y = e.offsetY;
-    });
-}
-
-function addHandlerOnMouseMove(el, variables) {
-    el.addEventListener('mousemove', function(e){
-        variables.mouse.state = 'enter';
-        variables.mouse.x = e.offsetX;
-        variables.mouse.y = e.offsetY;
-    });
-}
-
-function addHandlersNavigationArrows(arrows) {
-    arrows.prev.addEventListener('click', function(e){
-        arrows.prevAction();
-    });
-    arrows.next.addEventListener('click', function(e){
-        arrows.nextAction();
-    });
-}
-
-/**
- * Create canvas, append to DOM and add events listeners
- */
-function createCanvas(rootEl) {
-    let canvas = document.createElement('canvas');
-    rootEl.appendChild(canvas);
-
-
-    return canvas;
-}
-
-function createPreloader(rootEl) {
-    let preloader = document.createElement('div');
-    preloader.classList.add('slider__preloader');
-
-    let spinner = document.createElement('div');
-    spinner.classList.add('slider__preloader-spinner');
-
-    preloader.appendChild(spinner);
-    rootEl.appendChild(preloader);
-
-    return preloader;
-}
-
-function removePreloader(el) {
-    el.remove();
-}
-
-/**
- * Create Arrows, append to DOM and add events listeners
- */
-function createArrows(rootEl) {
-    let arrows = document.createElement('div');
-    arrows.classList.add('slider__arrows-container');
-
-    let arrowNext = document.createElement('button');
-    arrowNext.classList.add('slider__arrows-btn');
-    arrowNext.classList.add('-next');
-    arrowNext.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="10 18 16 12 10 6"></polyline></svg>';
-
-    let arrowPrev = document.createElement('button');
-    arrowPrev.classList.add('slider__arrows-btn');
-    arrowPrev.classList.add('-prev');
-    arrowPrev.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polyline points="14 18 8 12 14 6"></polyline></svg>';
-
-    arrows.appendChild(arrowPrev);
-    arrows.appendChild(arrowNext);
-    rootEl.appendChild(arrows);
-
-    return {
-        prev: arrowPrev,
-        next: arrowNext
-    };
-}
-
-/**
- * Create Dots, append to DOM and add events listeners
- */
-function createDots(rootEl, items, itemActive) {
-    let dots = document.createElement('div');
-    dots.classList.add('slider__dots-container');
-
-    for (let i = 0; i < items.length; i++) {
-        let dot = document.createElement('button');
-        dot.classList.add('slider__dot');
-        if (i === itemActive) {
-            dot.classList.add('is-active');
-        }
-        dot.setAttribute('data-dot-number', i.toString());
-        dot.innerHTML = 'i';
-        dots.appendChild(dot);
-    }
-
-    rootEl.appendChild(dots);
-
-    return dots;
-}
-
-/**
- * Simple object check.
- * @param item
- * @returns {boolean}
- */
-function isObject(item) {
-    return (item && typeof item === 'object' && !Array.isArray(item));
-}
-
-/**
- * Deep merge two objects.
- * @param target
- * @param ...sources
- */
-function mergeDeep(target, ...sources) {
-    if (!sources.length) return target;
-    const source = sources.shift();
-
-    if (isObject(target) && isObject(source)) {
-        for (const key in source) {
-            if (isObject(source[key])) {
-                if (!target[key]) Object.assign(target, {
-                    [key]: {}
-                });
-                mergeDeep(target[key], source[key]);
-            } else {
-                Object.assign(target, {
-                    [key]: source[key]
-                });
-            }
-        }
-    }
-
-    return mergeDeep(target, ...sources);
-}
-
-class Slider {
-
-    constructor(rootEl, options) {
-
-        this.defaults = {
-            effects: {
-                filter: 'base',
-                slide: 'base'
-            },
-            animationSpeed: 500,
-            arrows: true,
-            dots: false,
-            autoplay: false,
-            autoplaySpeed: 3000,
-            preloader: true,
-            startItem: 0
-        };
-        this.html = {
-            root: rootEl,
-            canvas: null,
-            preloader: null,
-            arrows: null,
-            dots: null
-        };
-        this.geometrySize = {
-            x: 30,
-            y: 20
-        };
-        this.items = [];
-        this.variables = {
-            progress: 0,
-            time: 0,
-            canvasSize: {
-                width: 0,
-                height: 0
-            },
-            canvasRatio: {
-                width: 1,
-                height: 1
-            },
-            texRatio0: {
-                width: 1,
-                height: 1
-            },
-            texRatio1: {
-                width: 1,
-                height: 1
-            },
-            mouse: {
-                state: 'out',
-                x: 0,
-                y: 0
-            }
-        };
-        this.options = mergeDeep(this.defaults, options);
-
-        let self = this;  // save this context
-
-        if (self.options.preloader) {
-            self.html.preloader = createPreloader(self.html.root);
-        }
-
-        self.html.canvas = createCanvas(self.html.root);
-        addHandlersCanvas(self.html.canvas, self.variables);
-
-        self.gl = initGL(self.html.canvas);
-        self.programInfo = initShaderProgram(
-            self.gl,
-            shaders.vertex.base(),
-            combineFragmentShader(self.options.effects)
-        );
-        self.buffers = initBuffers(self.gl, self.geometrySize); // инициализируем плоскость
-
-        self.loadItems(function () {
-            self.sortItems();
-
-            self.itemActive = self.options.startItem; // задаём начальный слайд
-            console.log(self.items);
-            console.log( self.itemActive);
-            self.generateArrow();
-            self.generateDots();
-
-            self.slide(0, 0, 1, 0); // инициализируем начальный слайд
-
-            let then = 0;
-
-            // Draw the scene repeatedly
-            function render(now) {
-                now *= 0.001;  // convert to seconds
-                let deltaTime = now - then;
-                then = now;
-
-                drawScene(self.gl, self.items, self.itemActive, self.geometrySize, self.variables, self.programInfo, self.buffers, deltaTime);
-
-                requestAnimationFrame(render);
-            }
-            requestAnimationFrame(render);
-
-            if (self.options.preloader) {
-                removePreloader(self.html.preloader);
-            }
-
-            self.html.root.dataset.initialized = 'true';
-
-        });
-    }
-
-    /**
-     * загружаем все картинки, проверяя доступны ли они,
-     * если не 404, то добавляем их в this.items[]
-     */
-    loadItems(callback) {
-
-        // items = [];
-        let textureList = this.html.root.querySelectorAll('[data-item]');
-        // console.log(textureList);
-        let total = textureList.length;
-        let done = 0;
-        let fail = 0;
-
-        function loaded(state) {
-            if (state === 'done') {
-                done++;
-            } else {
-                fail++;
-            }
-            if (done + fail === total) {
-                setTimeout(function () {
-                    callback();
-                }, 20);
-            }
-        }
-
-        textureList.forEach((element,index) => {
-            let texture = element.querySelector('img, video');
-
-            if (texture.tagName === 'IMG' || texture.tagName === 'img') {
-                let url = new URL(texture.src);
-                this.items.push(loadTexture(this.gl, url, index, loaded));
-            }
-        });
-    }
-
-    /**
-     * Sorting items
-     */
-    sortItems(){
-        function compareIndex(itemA, itemB) {
-            return itemA.index - itemB.index;
-        }
-        this.items.sort(compareIndex);
-    }
-
-    // TODO: усложнить логику, сейчас только loop, а может быть не зацикленный слайдер
-    /**
-     * Общая функция для перехода между слайдами
-     */
-    slide(curr, next, dir, time) {
-
-        let self = this;  // save this context
-
-        time = (time >= 0) ? time : this.options.animationSpeed;
-
-        if (time === 0) {
-            changeImage(curr, curr, dir);
-            self.variables.progress = 0;
-            self.itemActive = next;
-        } else {
-            changeImage(curr, next, dir);
-
-            animateNumber(self.variables.progress, 0, 1, time, function () {
-                changeImage(next, next, dir);
-                self.variables.progress = 0;
-                self.itemActive = next;
-
-                if (self.options.dots) {
-                    self.html.root.querySelectorAll('[data-dot-number]').forEach(element=>{
-                        element.classList.remove('is-active');
-                    });
-                    self.html.root.querySelector('[data-dot-number=' + self.itemActive + ']').classList.add('is-active');
-                }
-
-            });
-
-        }
-
-        function animateNumber(where, from, to, time, cb) {
-            // let start = new Date().getTime();
-            //
-            // function delta(_progress) {
-            //     return Math.pow(_progress, 2);
-            // }
-            //
-            // setTimeout(function () {
-            //     let now = (new Date().getTime()) - start;
-            //     let _progress = now / time;
-            //     let result = (to - from) * delta(_progress) + from;
-            //     self.variables.progress = (result > 1) ? 1 : result;
-            //
-            //     if (_progress < 1) {
-            //         setTimeout(arguments.callee, 5);
-            //     } else {
-            //         cb();
-            //     }
-            // }, 10);
-
-        }
-
-        function changeImage(curr, next, dir) {
-            console.log('curr', self.items[curr]);
-            console.log('next', self.items[next]);
-            // Tell WebGL we want to affect texture unit 0
-            self.gl.activeTexture(self.gl.TEXTURE0);
-            // Bind the texture to texture unit 0
-            self.gl.bindTexture(self.gl.TEXTURE_2D, self.items[curr].texture);
-            // Tell WebGL we want to affect texture unit 1
-            self.gl.activeTexture(self.gl.TEXTURE1);
-            // Bind the texture to texture unit 0
-            self.gl.bindTexture(self.gl.TEXTURE_2D, self.items[next].texture);
-        }
-
-    }
-
-    /**
-     * Goes to item number X
-     * @param number - next item
-     */
-    slideTo(number) {
-        if (0 <= number && number < this.items.length) {
-            this.slide(this.itemActive, number, 1);
-        }
-    }
-
-    /**
-     * Goes to next item
-     */
-    slideNext(){
-        if (this.itemActive + 1 < this.items.length) {
-            this.slide(this.itemActive, this.itemActive + 1, 1);
-        } else {
-            this.slide(this.itemActive, 0, 1);
-        }
-    }
-
-    /**
-     * Goes to previous item
-     */
-    slidePrev() {
-        if (this.itemActive - 1 >= 0) {
-            this.slide(this.itemActive, this.itemActive - 1, 1);
-        } else {
-            this.slide(this.itemActive, this.items.length - 1, 1);
-        }
-    }
-
-    generateArrow(){
-        let self = this;  // save this context
-        if (this.options.arrows) {
-            this.html.arrows = createArrows(this.html.root);
-            addHandlersNavigationArrows({
-                prev: this.html.arrows.prev,
-                prevAction: function () {
-                    self.slidePrev();
-                },
-                next: this.html.arrows.next,
-                nextAction: function () {
-                    self.slideNext;
-                }
-            });
-        }
-    }
-
-    generateDots(){
-        if (this.options.dots) {
-            this.html.dots = createDots(this.html.root, this.items, this.options.startItem);
-        }
-    }
-
-    test() {
-        console.log('I\'m slider');
-        console.log(this.options);
-    }
-}
-
-export default Slider;
+export const sub = subtract;
