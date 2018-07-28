@@ -1,8 +1,7 @@
 /**
  * @fileoverview glsl-slider - High performance matrix and vector operations
- * @author Brandon Jones
- * @author Colin MacKenzie IV
- * @version 2.7.0
+ * @author Andrey Kozlov
+ * @version 0.0.1
  */
 
 /* Copyright (c) 2015-2018, Brandon Jones, Colin MacKenzie IV.
