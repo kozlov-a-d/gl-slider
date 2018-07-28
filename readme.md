@@ -31,4 +31,5 @@ GLSL Slider is a easy to use slider with awesome transition effects, which use g
 
 ### License
 Copyright (c) 2018 Andrey Kozlov
+
 Licensed under the MIT license.
