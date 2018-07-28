@@ -14,9 +14,7 @@
     ],
     "author": "Andrey Kozlov",
     "license": "MIT",
-    "dependencies": {
-        "gl-matrix": "^2.7.0"
-    },
+    "dependencies": {},
     "devDependencies": {
         "rollup": "^0.62.0"
     }
