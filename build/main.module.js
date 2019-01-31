@@ -1021,6 +1021,12 @@ function mergeDeep(target, ...sources) {
     return mergeDeep(target, ...sources);
 }
 
+/**
+ * @fileoverview glsl-slider - High performance matrix and vector operations
+ * @author Andrey Kozlov
+ * @version 0.0.1
+ */
+
 class Slider {
 
     constructor(rootEl, options) {

@@ -4,7 +4,8 @@
     "description": "Slider with awesome transition effects, which use glsl shaders",
     "main": "build/main.js",
     "scripts": {
-        "build": "rollup -c"
+        "build": "rollup -c",
+        "dev": "rollup -c -w"
     },
     "keywords": [
         "js",
@@ -16,6 +17,8 @@
     "license": "MIT",
     "dependencies": {},
     "devDependencies": {
-        "rollup": "^0.62.0"
+        "rollup": "^0.62.0",
+        "rollup-plugin-browsersync": "^1.0.0",
+        "rollup-watch": "^4.3.1"
     }
 }
