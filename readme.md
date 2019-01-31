@@ -1,8 +1,8 @@
-# GLSL Slider
+# WebGL Slider
 
-GLSL Slider is a easy to use slider with awesome transition effects, which use glsl shaders. 
+WebGL Slider is a easy to use slider with awesome transition effects, which use glsl shaders. 
 
-[Demo](https://kozlov-a-d.github.io/glsl-slider/)
+[Demo](https://kozlov-a-d.github.io/webgl-slider/)
 
 ### How to use
 
@@ -25,7 +25,7 @@ GLSL Slider is a easy to use slider with awesome transition effects, which use g
         autoplay: false,           // will work later
         autoplaySpeed: 3000,       // will work later
     };
-    let slider = new SliderGLSL(document.getElementById('slider'), sliderOptions);
+    let slider = new webglSlider(document.getElementById('slider'), sliderOptions);
 </script>
 ```
 
