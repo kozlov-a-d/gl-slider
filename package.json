@@ -1,5 +1,5 @@
 {
-    "name": "glsl-slider",
+    "name": "webgl-slider",
     "version": "0.0.1",
     "description": "Slider with awesome transition effects, which use glsl shaders",
     "main": "build/main.js",
@@ -11,7 +11,8 @@
         "js",
         "glsl",
         "shaders",
-        "canvas"
+        "canvas",
+        "webgl"
     ],
     "author": "Andrey Kozlov",
     "license": "MIT",
