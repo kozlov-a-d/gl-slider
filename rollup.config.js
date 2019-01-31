@@ -1,4 +1,5 @@
 import browsersync from 'rollup-plugin-browsersync';
+import scss from 'rollup-plugin-scss';
 
 export default {
     input: 'src/scripts/main.js',
@@ -6,31 +7,31 @@ export default {
     output: [
 		{
 			format: 'umd',
-			name: 'SliderGLSL',
-			file: 'build/main.js',
+			name: 'webglSlider',
+			file: 'build/webgl-slider.js',
 			indent: '\t'
 		},
 		{
 			format: 'es',
-			file: 'build/main.module.js',
+			file: 'build/webgl-slider.module.js',
 			indent: '\t'
 		}
 	],
 	watch: {
 		chokidar: {
-		  // if the chokidar option is given, rollup-watch will
-		  // use it instead of fs.watch. You will need to install
-		  // chokidar separately.
+		  // if the chokidar option is given, rollup-watch will use it instead of fs.watch. 
+		  // You will need to install chokidar separately.
 		  //
-		  // this options object is passed to chokidar. if you
-		  // don't have any options, just pass `chokidar: true`
+		  // this options object is passed to chokidar. if you don't have any options, just pass `chokidar: true`
 		},
 	
-		// include and exclude govern which files to watch. by
-		// default, all dependencies will be watched
+		// include and exclude govern which files to watch. by default, all dependencies will be watched
 		exclude: ['node_modules/**']
 	},
 	plugins: [
-	  browsersync({server: '.'})
+		scss({ 
+			output: 'build/webgl-slider.css', 
+		}),
+	  	browsersync({server: '.'})
 	]
 };

@@ -25,7 +25,9 @@ import * as htmlUtil from './html.util';
 import * as helper from './other.util';
 import { shaders } from '../shaders/shaders';
 
-export default class Slider {
+import '../styles/main.scss';
+
+export default class webglSlider {
 
     constructor(rootEl, options) {
 
@@ -166,7 +168,7 @@ export default class Slider {
 
     /**
      * загружаем все картинки, проверяя доступны ли они,
-     * если не 404, то добавляем их в this.items[]
+     * если не 404, то добавляем их в this.items[] 
      */
     loadItems(callback) {
 

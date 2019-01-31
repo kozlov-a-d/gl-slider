@@ -1,7 +1,7 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.SliderGLSL = factory());
+	(global.webglSlider = factory());
 }(this, (function () { 'use strict';
 
 	let vertexBase = function(){
@@ -1033,7 +1033,7 @@
 	 * @version 0.0.1
 	 */
 
-	class Slider {
+	class webglSlider {
 
 	    constructor(rootEl, options) {
 
@@ -1174,7 +1174,7 @@
 
 	    /**
 	     * загружаем все картинки, проверяя доступны ли они,
-	     * если не 404, то добавляем их в this.items[]
+	     * если не 404, то добавляем их в this.items[] 
 	     */
 	    loadItems(callback) {
 
@@ -1311,6 +1311,6 @@
 	    }
 	}
 
-	return Slider;
+	return webglSlider;
 
 })));

@@ -7,7 +7,7 @@
     <title>GLSL Slider</title>
     <meta name="description" content="GLSL Slider is a easy to use slider with awesome transition effects, which use glsl shaders." />
     <meta name="google-site-verification" content="iHbR91lVzZ8l7u9hu2RbDNphSTBtpmYKSXwT4vuLbw0" />
-    <link rel="stylesheet" href="assets/main.css">
+    <link rel="stylesheet" href="build/webgl-slider.css">
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-115091397-2"></script>
     <script>
@@ -31,7 +31,7 @@
     </div>
 
     <script src="assets/vendor/dat.gui/dat.gui.min.js"></script>
-    <script src="build/main.js"></script>
+    <script src="build/webgl-slider.js"></script>
     <script>
         let sliderOptions = {
             dots: true,
@@ -41,7 +41,7 @@
                 slide: 'zoomBlur'      // base | zoomBlur | fragmentParalax | wave
             }
         };
-        let slider = new SliderGLSL(document.getElementById('slider'), sliderOptions);
+        let slider = new webglSlider(document.getElementById('slider'), sliderOptions);
 
         let gui = new dat.GUI();
 

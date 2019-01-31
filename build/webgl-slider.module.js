@@ -1027,7 +1027,7 @@ function mergeDeep(target, ...sources) {
  * @version 0.0.1
  */
 
-class Slider {
+class webglSlider {
 
     constructor(rootEl, options) {
 
@@ -1168,7 +1168,7 @@ class Slider {
 
     /**
      * загружаем все картинки, проверяя доступны ли они,
-     * если не 404, то добавляем их в this.items[]
+     * если не 404, то добавляем их в this.items[] 
      */
     loadItems(callback) {
 
@@ -1305,4 +1305,4 @@ class Slider {
     }
 }
 
-export default Slider;
+export default webglSlider;
