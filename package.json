@@ -2,7 +2,7 @@
     "name": "gl-slider",
     "version": "0.0.1",
     "description": "GL-Slider with awesome transition effects, which use glsl shaders",
-    "main": "build/main.js",
+    "main": "build/gl-slider.js",
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w"

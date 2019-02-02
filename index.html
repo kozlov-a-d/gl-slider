@@ -26,6 +26,7 @@
             <div class="l-container header__container">
                 <a class="header__logo" href="">gl-slider.js</a>
                 <nav class="header__menu">
+                    <button>Toogle menu</button>
                     <ul>
                         <li><a href="#about">About</a></li>
                         <li><a href="#how-to-use">How to use</a></li>
@@ -39,21 +40,32 @@
         <main class="l-main main">
 
             <div class="hero">
-                <!-- <div class="hero__slider slider" id="slider">
+                <div class="hero__slider slider" id="slider">
                     <div class="slider__item" data-item><img src="assets/images/img1.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img2.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img4.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img7.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img8.jpg" alt=""></div>
-                </div> -->
+                </div>
             </div>
 
-            <div class="l-container about" id="about">
+            <div class="l-container">
+                <div class="dat-gui-container" id="my-gui-container"></div>
+            </div>
+
+            <div class="l-container l-section about" id="about">
                 <h1>GL-Slider</h1>
                 <p>GL-Slider is a easy to use slider with awesome transition effects, which use glsl shaders.</p>
+                <p>Features</p>
+                <ul>
+                    <li>Presets animation effects</li>
+                    <li>Responsive</li>
+                    <li>Easy to implement</li>
+                    <li>No dependencies</li>
+                </ul>
             </div>
 
-            <section class="l-container how-to-use" id="how-to-use">
+            <section class="l-container l-section how-to-use" id="how-to-use">
                 <h2>How to use</h2>
                 <p>Add CSS file:</p>
 <pre><code class="language-markup">&lt;link rel="stylesheet" href="./your/path/to/build/gl-slider.css"></code></pre>
@@ -94,11 +106,12 @@
                 <h2>Options</h2>
             </section> -->
 
-            <section class="l-container get-it-now" id="get-it-now">
+            <section class="l-container l-section get-it-now" id="get-it-now">
                 <h2>Get it now</h2>
                 <div class="get-it-now__list">
                     <a class="get-it-now__item get-it-now__item--download" href="https://github.com/kozlov-a-d/gl-slider/archive/master.zip">Download</a>
                     <a class="get-it-now__item get-it-now__item--github" href="https://github.com/kozlov-a-d/gl-slider">GitHub</a>
+                    <a class="get-it-now__item get-it-now__item--npm" href="https://www.npmjs.com/package/gl-slider">NPM</a>
                 </div>
             </section>
 

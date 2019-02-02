@@ -14,6 +14,9 @@ let slider = new glSlider(document.getElementById('slider'), sliderOptions);
 
 let gui = new dat.GUI();
 
+let customContainer = document.getElementById('my-gui-container');
+customContainer.appendChild(gui.domElement);
+
 let controllerFilter = gui.add(sliderOptions.effects, 'filter', ['base', 'monochrome', 'negative', 'sepia']);
 controllerFilter.onFinishChange(function () {
     slider.update(sliderOptions);
@@ -31,3 +34,21 @@ controllerSpeed.onFinishChange(function () {
 
 // Menu scroll
 
+(()=>{
+    
+    const anchors = document.querySelectorAll('a[href*="#"]')
+
+    for (let anchor of anchors) {
+        anchor.addEventListener('click', (e) => {
+            e.preventDefault()
+            
+            const blockID = anchor.getAttribute('href')
+            
+            document.querySelector('' + blockID).scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        })
+    }
+
+})();

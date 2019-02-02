@@ -34,3 +34,11 @@ GL-Slider is a easy to use slider with awesome transition effects, which use gls
 Copyright (c) 2018 Andrey Kozlov
 
 Licensed under the MIT license.
+
+## Thanks
+The following libraries / open-source projects / peoples
+ * [Yuri Artiukh](https://github.com/akella)
+ * [Rollup](https://rollupjs.org)
+ * [Sass](http://sass-lang.com/)
+ * [Node.js](http://nodejs.org/)
+ 
