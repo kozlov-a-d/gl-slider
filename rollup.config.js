@@ -7,13 +7,13 @@ export default {
     output: [
 		{
 			format: 'umd',
-			name: 'webglSlider',
-			file: 'build/webgl-slider.js',
+			name: 'glSlider',
+			file: 'build/gl-slider.js',
 			indent: '\t'
 		},
 		{
 			format: 'es',
-			file: 'build/webgl-slider.module.js',
+			file: 'build/gl-slider.module.js',
 			indent: '\t'
 		}
 	],
@@ -30,7 +30,7 @@ export default {
 	},
 	plugins: [
 		scss({ 
-			output: 'build/webgl-slider.css', 
+			output: 'build/gl-slider.css', 
 		}),
 	  	browsersync({server: '.'})
 	]

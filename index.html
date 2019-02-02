@@ -7,9 +7,9 @@
     <title>GLSL Slider</title>
     <meta name="description" content="WebGL Slider is a easy to use slider with awesome transition effects, which use glsl shaders." />
     <meta name="google-site-verification" content="iHbR91lVzZ8l7u9hu2RbDNphSTBtpmYKSXwT4vuLbw0" />
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="assets/app.css">
     <link rel="stylesheet" href="assets/vendor/prism/prism.css">
-    <link rel="stylesheet" href="build/webgl-slider.css">
+    <link rel="stylesheet" href="build/gl-slider.css">
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-115091397-2"></script>
     <script>
@@ -24,13 +24,13 @@
 
         <header class="l-header header">
             <div class="l-container header__container">
-                <a class="header__logo" href="">webgl-slider.js</a>
+                <a class="header__logo" href="">gl-slider.js</a>
                 <nav class="header__menu">
                     <ul>
-                        <li><a href="">About</a></li>
-                        <li><a href="">How to use</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#how-to-use">How to use</a></li>
                         <!-- <li><a href="">Options</a></li> -->
-                        <li><a href="">Get it now</a></li>
+                        <li><a href="#get-it-now">Get it now</a></li>
                     </ul>
                 </nav>
             </div>
@@ -39,45 +39,54 @@
         <main class="l-main main">
 
             <div class="hero">
-                <div class="hero__slider slider" id="slider">
+                <!-- <div class="hero__slider slider" id="slider">
                     <div class="slider__item" data-item><img src="assets/images/img1.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img2.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img4.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img7.jpg" alt=""></div>
                     <div class="slider__item" data-item><img src="assets/images/img8.jpg" alt=""></div>
-                    <!-- <div class="slider__item" data-item><img src="assets/images/img9.jpg" alt=""></div>
-                    <div class="slider__item" data-item><img src="assets/images/img10.jpg" alt=""></div>
-                    <div class="slider__item" data-item><img src="assets/images/girl-2.jpg" alt=""></div> -->
-                </div>
+                </div> -->
             </div>
 
-            <div class="l-container about">
-                <h1>WebGL Slider</h1>
-                <p>WebGL Slider is a easy to use slider with awesome transition effects, which use glsl shaders.</p>
+            <div class="l-container about" id="about">
+                <h1>GL-Slider</h1>
+                <p>GL-Slider is a easy to use slider with awesome transition effects, which use glsl shaders.</p>
             </div>
 
-            <section class="l-container how-to-use">
+            <section class="l-container how-to-use" id="how-to-use">
                 <h2>How to use</h2>
-                <h3>Including files</h3>
-                <p>Add CSS file</p>
-<pre><code class="language-markup">``` <link rel="stylesheet" href="./your/path/to/build/webgl-slider.css">```</code></pre>
-                <p>Initialize and Options</p>
-<pre><code class="language-javascript">    // initialize
-    let slider = new webglSlider(document.getElementById('slider'), {
-        arrows: true,             // Boolean (default - true)
-        dots: false,              // Boolean (default - false)
-        preloader: true,          // Boolean (default - true)
+                <p>Add CSS file:</p>
+<pre><code class="language-markup">&lt;link rel="stylesheet" href="./your/path/to/build/gl-slider.css"></code></pre>
 
-        autoplay: false,          // Boolean (default - false)
-        autoplaySpeed: 3000,      // Number (default - 3000)
+                <p>Add JS file:</p>
+<pre><code class="language-markup">&lt;script src="./your/path/to/build/gl-slider.js"></script></code></pre>
+                <p>or es6 import in your bundler system:</p>
+<pre><code class="language-javascript">import webglSlider from "./your/path/to/build/gl-slider.module.js";</code></pre>
 
-        startItem: 0,             // Number (defaul - 0)
-        animationSpeed: 800,      // Number (default - 500)
-        effects: {
-            filter: 'base',        // String ( defaul - base | monochrome | negative | sepia )
-            slide: 'zoomBlur'      // String ( defaul - base | zoomBlur | fragmentParalax | wave )
-        }
-    });
+                <p>Add markup:</p>
+<pre><code class="language-javascript">&lt;div class="slider" id="slider">
+    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img1.jpg" alt="">&lt;/div>
+    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img2.jpg" alt="">&lt;/div>
+    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img4.jpg" alt="">&lt;/div>
+    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img7.jpg" alt="">&lt;/div>
+    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img8.jpg" alt="">&lt;/div>
+&lt;/div></code></pre>
+                <p>Initialize and Options:</p>
+<pre><code class="language-javascript">let slider = new glSlider(document.getElementById('slider'), {
+    arrows: true,             // Boolean (default - true)
+    dots: false,              // Boolean (default - false)
+    preloader: true,          // Boolean (default - true)
+
+    autoplay: false,          // Boolean (default - false)
+    autoplaySpeed: 3000,      // Number (default - 3000)
+
+    startItem: 0,             // Number (defaul - 0)
+    animationSpeed: 800,      // Number (default - 500)
+    effects: {
+        filter: 'base',        // String ( defaul - base | monochrome | negative | sepia )
+        slide: 'zoomBlur'      // String ( defaul - base | zoomBlur | fragmentParalax | wave )
+    }
+});
 </code></pre>
             </section>
 
@@ -85,11 +94,11 @@
                 <h2>Options</h2>
             </section> -->
 
-            <section class="l-container get-it-now">
+            <section class="l-container get-it-now" id="get-it-now">
                 <h2>Get it now</h2>
                 <div class="get-it-now__list">
-                    <a class="get-it-now__item --download" href="https://github.com/kozlov-a-d/webgl-slider/archive/master.zip">Download</a>
-                    <a class="get-it-now__item --github" href="https://github.com/kozlov-a-d/webgl-slider">GitHub</a>
+                    <a class="get-it-now__item get-it-now__item--download" href="https://github.com/kozlov-a-d/gl-slider/archive/master.zip">Download</a>
+                    <a class="get-it-now__item get-it-now__item--github" href="https://github.com/kozlov-a-d/gl-slider">GitHub</a>
                 </div>
             </section>
 
@@ -97,7 +106,7 @@
 
         <footer class="l-footer footer">
             <div class="l-container footer__container">
-                <a class="footer__link-github" href="https://github.com/kozlov-a-d/webgl-slider" target="_blank">View on GitHub</a>
+                <a class="footer__link-github" href="https://github.com/kozlov-a-d/gl-slider" target="_blank">View on GitHub</a>
             </div>
         </footer>
 
@@ -105,37 +114,6 @@
 
     <script src="assets/vendor/dat.gui/dat.gui.min.js"></script>
     <script src="assets/vendor/prism/prism.js"></script>
-    <script src="build/webgl-slider.js"></script>
-    <script>
-        let sliderOptions = {
-            dots: true,
-            animationSpeed: 800,
-            effects: {
-                filter: 'base',        // base | monochrome | negative | sepia
-                slide: 'zoomBlur'      // base | zoomBlur | fragmentParalax | wave
-            }
-        };
-        let slider = new webglSlider(document.getElementById('slider'), sliderOptions);
-
-        // DAT.GUI
-
-        let gui = new dat.GUI();
-
-        let controllerFilter = gui.add(sliderOptions.effects, 'filter', ['base', 'monochrome', 'negative', 'sepia']);
-        controllerFilter.onFinishChange(function () {
-            slider.update(sliderOptions);
-        });
-
-        let controllerSlide = gui.add(sliderOptions.effects, 'slide', ['base', 'wave', 'zoomBlur', 'fragmentParalax']);
-        controllerSlide.onFinishChange(function () {
-            slider.update(sliderOptions);
-        });
-
-        let controllerSpeed = gui.add(sliderOptions, 'animationSpeed', 0, 1500);
-        controllerSpeed.onFinishChange(function () {
-            slider.update(sliderOptions);
-        });
-
-    </script>
-</body>
+    <script src="build/gl-slider.js"></script>
+    <script src="assets/app.js"></script>
 </html>
