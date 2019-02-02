@@ -1,13 +1,14 @@
-# WebGL Slider
+# GL-Slider
 
-WebGL Slider is a easy to use slider with awesome transition effects, which use glsl shaders. 
+GL-Slider is a easy to use slider with awesome transition effects, which use glsl shaders. 
 
-[Demo](https://kozlov-a-d.github.io/webgl-slider/)
+[Demo](https://kozlov-a-d.github.io/gl-slider/)
 
 ### How to use
 
 ```
-<script src="build/main.js"></script>
+<link href="./your/path/to/build/gl-slider.css" rel="stylesheet">
+<script src="./your/path/to/build/gl-slider.js">
 <script>
     let sliderOptions = {
         arrows: true,
@@ -25,7 +26,7 @@ WebGL Slider is a easy to use slider with awesome transition effects, which use 
         autoplay: false,           // will work later
         autoplaySpeed: 3000,       // will work later
     };
-    let slider = new webglSlider(document.getElementById('slider'), sliderOptions);
+    let slider = new glSlider(document.getElementById('slider'), sliderOptions);
 </script>
 ```
 

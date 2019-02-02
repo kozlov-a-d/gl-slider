@@ -1,7 +1,7 @@
 {
-    "name": "webgl-slider",
+    "name": "gl-slider",
     "version": "0.0.1",
-    "description": "Slider with awesome transition effects, which use glsl shaders",
+    "description": "GL-Slider with awesome transition effects, which use glsl shaders",
     "main": "build/main.js",
     "scripts": {
         "build": "rollup -c",
