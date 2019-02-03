@@ -1052,8 +1052,8 @@ class webglSlider {
             dots: null
         };
         this.geometrySize = {
-            x: 30,
-            y: 20
+            x: 1,
+            y: 1
         };
         this.items = [];
         this.variables = {
@@ -1124,6 +1124,7 @@ class webglSlider {
                     self.animate.currTime += deltaTime;
                     self.variables.progress = self.animate.currTime/self.animate.totalTime;
                 }
+
                 if( self.variables.progress >= 1 ){
                     self.variables.progress = 0;
                     self.animate.isActive = false;
