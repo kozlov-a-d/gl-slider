@@ -38,6 +38,8 @@ GL-Slider is a easy to use slider with awesome transition effects, which use gls
         
         autoplay: false,           // will work later
         autoplaySpeed: 3000,       // will work later
+
+        renderInView: true, // render only when slider visible (Used Intersection Observer API )
     };
 
     let slider = new glSlider(document.getElementById('slider'), sliderOptions);

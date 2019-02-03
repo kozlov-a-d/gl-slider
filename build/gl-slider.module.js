@@ -1033,6 +1033,7 @@ class webglSlider {
 
     constructor(rootEl, options) {
 
+
         this.defaults = {
             effects: {
                 filter: 'base',
@@ -1044,7 +1045,8 @@ class webglSlider {
             autoplay: false,
             autoplaySpeed: 3000,
             preloader: true,
-            startItem: 0
+            startItem: 0,
+            renderInView: false // render only when slider visible
         };
         this.html = {
             root: rootEl,
@@ -1089,6 +1091,7 @@ class webglSlider {
             currTime: 0,
             totalTime: this.options.animationSpeed
         };
+        this.onView = false;
 
         let self = this;  // save this context
 
@@ -1119,31 +1122,33 @@ class webglSlider {
             // Draw the scene repeatedly
             function render(now) {
                 // now *= 0.001;  // convert to seconds
-                let deltaTime = now - then;
-                then = now;
 
-                if(self.animate.isActive){
-                    self.animate.currTime += deltaTime;
-                    self.variables.progress = self.animate.currTime/self.animate.totalTime;
-                }
+                if(self.onView){
+                    let deltaTime = now - then;
+                    then = now;
 
-                if( self.variables.progress >= 1 ){
-                    self.variables.progress = 0;
-                    self.animate.isActive = false;
-                    self.changeImage(self.itemActive, self.itemActive, null);
-
-                    if (self.options.dots) {
-                        self.html.dots.querySelectorAll('button').forEach(element=>{
-                            element.classList.remove('is-active');
-                            if(parseInt(element.dataset.dotNumber) === self.itemActive ){
-                                element.classList.add('is-active');
-                            }
-                        });
+                    if(self.animate.isActive){
+                        self.animate.currTime += deltaTime;
+                        self.variables.progress = self.animate.currTime/self.animate.totalTime;
                     }
+
+                    if( self.variables.progress >= 1 ){
+                        self.variables.progress = 0;
+                        self.animate.isActive = false;
+                        self.changeImage(self.itemActive, self.itemActive, null);
+
+                        if (self.options.dots) {
+                            self.html.dots.querySelectorAll('button').forEach(element=>{
+                                element.classList.remove('is-active');
+                                if(parseInt(element.dataset.dotNumber) === self.itemActive ){
+                                    element.classList.add('is-active');
+                                }
+                            });
+                        }
+                    }
+
+                    drawScene(self.gl, self.items, self.itemActive, self.geometrySize, self.variables, self.programInfo, self.buffers, deltaTime);
                 }
-
-                drawScene(self.gl, self.items, self.itemActive, self.geometrySize, self.variables, self.programInfo, self.buffers, deltaTime);
-
                 requestAnimationFrame(render);
             }
             requestAnimationFrame(render);
@@ -1154,6 +1159,16 @@ class webglSlider {
 
             self.html.root.dataset.initialized = 'true';
         });
+
+
+        if(self.options.renderInView){
+            let observer = new IntersectionObserver(()=>{
+                this.onView = !this.onView;
+            }, { threshold: '0.05' });
+            observer.observe(this.html.root);
+        } else {
+            this.onView = true;
+        }
     }
 
     /**

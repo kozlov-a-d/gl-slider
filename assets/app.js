@@ -3,6 +3,7 @@
 let sliderOptions = {
     dots: true,
     animationSpeed: 800,
+    renderInView: true, // render only when slider visible
     effects: {
         filter: 'base',        // base | monochrome | negative | sepia
         slide: 'zoomBlur'      // base | zoomBlur | fragmentParalax | wave
