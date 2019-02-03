@@ -1,6 +1,6 @@
 {
     "name": "gl-slider",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "GL-Slider with awesome transition effects, which use glsl shaders",
     "homepage": "https://github.com/kozlov-a-d/gl-slider",
     "repository": {
