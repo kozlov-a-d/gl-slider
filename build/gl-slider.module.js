@@ -1024,9 +1024,9 @@ function mergeDeep(target, ...sources) {
 }
 
 /**
- * @fileoverview glsl-slider - High performance matrix and vector operations
+ * @fileoverview gl-slider is a easy to use slider with awesome transition effects, which use glsl shaders. 
  * @author Andrey Kozlov
- * @version 0.0.1
+ * @version 0.0.4
  */
 
 class webglSlider {
