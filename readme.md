@@ -7,8 +7,21 @@ GL-Slider is a easy to use slider with awesome transition effects, which use gls
 ### How to use
 
 ```
+<!-- Add CSS file -->
 <link href="./your/path/to/build/gl-slider.css" rel="stylesheet">
+<!-- Add JS file -->
 <script src="./your/path/to/build/gl-slider.js">
+
+<!-- Add markup -->
+<div class="gl-slider" id="slider">
+    <div class="gl-slider__item" data-item><img src="./your/path/to/images/img1.jpg" alt=""></div>
+    <div class="gl-slider__item" data-item><img src="./your/path/to/images/img2.jpg" alt=""></div>
+    <div class="gl-slider__item" data-item><img src="./your/path/to/images/img4.jpg" alt=""></div>
+    <div class="gl-slider__item" data-item><img src="./your/path/to/images/img7.jpg" alt=""></div>
+    <div class="gl-slider__item" data-item><img src="./your/path/to/images/img8.jpg" alt=""></div>
+</div>
+
+<!--Initialize and Options -->
 <script>
     let sliderOptions = {
         arrows: true,
@@ -26,6 +39,7 @@ GL-Slider is a easy to use slider with awesome transition effects, which use gls
         autoplay: false,           // will work later
         autoplaySpeed: 3000,       // will work later
     };
+
     let slider = new glSlider(document.getElementById('slider'), sliderOptions);
 </script>
 ```

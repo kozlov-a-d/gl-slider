@@ -1,4 +1,4 @@
-.slider{
+.gl-slider{
    
     box-sizing: border-box;
 
@@ -43,22 +43,19 @@
     }
     
     &__arrows{
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 40px;
+        pointer-events: none;
 
-        &-container{
-            position: absolute;
-            left: 0;
-            top: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            padding: 40px;
-            pointer-events: none;
-
-            @media screen and (max-width: 480px){
-                padding: 20px;
-            }
+        @media screen and (max-width: 480px){
+            padding: 20px;
         }
 
         &-btn{
@@ -82,7 +79,7 @@
                 width: 34px;
                 height: 34px;
                 fill: none;
-                stroke: #0081c6;
+                stroke: #24292e;
                 stroke-width: 2;
                 stroke-linecap: round;
                 stroke-linejoin: round;
@@ -103,7 +100,7 @@
         }
     }
 
-    &__dots-container{
+    &__dots{
         position: absolute;
         left: 0;
         top: 0;

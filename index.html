@@ -40,12 +40,12 @@
         <main class="l-main main">
 
             <div class="hero">
-                <div class="hero__slider slider" id="slider">
-                    <div class="slider__item" data-item><img src="assets/images/img1.jpg" alt=""></div>
-                    <div class="slider__item" data-item><img src="assets/images/img2.jpg" alt=""></div>
-                    <div class="slider__item" data-item><img src="assets/images/img4.jpg" alt=""></div>
-                    <div class="slider__item" data-item><img src="assets/images/img7.jpg" alt=""></div>
-                    <div class="slider__item" data-item><img src="assets/images/img8.jpg" alt=""></div>
+                <div class="hero__slider gl-slider" id="slider">
+                    <div class="gl-slider__item" data-item><img src="assets/images/img1.jpg" alt=""></div>
+                    <div class="gl-slider__item" data-item><img src="assets/images/img2.jpg" alt=""></div>
+                    <div class="gl-slider__item" data-item><img src="assets/images/img4.jpg" alt=""></div>
+                    <div class="gl-slider__item" data-item><img src="assets/images/img7.jpg" alt=""></div>
+                    <div class="gl-slider__item" data-item><img src="assets/images/img8.jpg" alt=""></div>
                 </div>
             </div>
 
@@ -76,12 +76,12 @@
 <pre><code class="language-javascript">import webglSlider from "./your/path/to/build/gl-slider.module.js";</code></pre>
 
                 <p>Add markup:</p>
-<pre><code class="language-javascript">&lt;div class="slider" id="slider">
-    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img1.jpg" alt="">&lt;/div>
-    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img2.jpg" alt="">&lt;/div>
-    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img4.jpg" alt="">&lt;/div>
-    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img7.jpg" alt="">&lt;/div>
-    &lt;div class="slider__item" data-item>&lt;img src="assets/images/img8.jpg" alt="">&lt;/div>
+<pre><code class="language-javascript">&lt;div class="gl-slider" id="slider">
+    &lt;div class="gl-slider__item" data-item>&lt;img src="./your/path/to/images/img1.jpg" alt="">&lt;/div>
+    &lt;div class="gl-slider__item" data-item>&lt;img src="./your/path/to/images/img2.jpg" alt="">&lt;/div>
+    &lt;div class="gl-slider__item" data-item>&lt;img src="./your/path/to/images/img4.jpg" alt="">&lt;/div>
+    &lt;div class="gl-slider__item" data-item>&lt;img src="./your/path/to/images/img7.jpg" alt="">&lt;/div>
+    &lt;div class="gl-slider__item" data-item>&lt;img src="./your/path/to/images/img8.jpg" alt="">&lt;/div>
 &lt;/div></code></pre>
                 <p>Initialize and Options:</p>
 <pre><code class="language-javascript">let slider = new glSlider(document.getElementById('slider'), {
